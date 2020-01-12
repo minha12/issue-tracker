@@ -155,7 +155,7 @@ module.exports = function (app) {
                 res.send('Could not delete data' + id)
               } else {
                 console.log('Deleted ' + id)
-                res.send('Deleted' + id)
+                res.send('Deleted ' + id)
               }
             })
           }
