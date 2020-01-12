@@ -17,7 +17,11 @@ const CONNECTION_STRING = process.env.DATABASE; //MongoClient.connect(CONNECTION
 module.exports = function (app) {
 
   app.route('/api/issues/:project')
-  
+    
+    /*
+    I can GET /api/issues/{projectname} for an array of all issues 
+    on that specific project with all the information for each issue as was returned when posted.
+    */
     .get(function (req, res){
       var project = req.params.project;
       
@@ -48,7 +52,7 @@ module.exports = function (app) {
         res.send('issue_title, issue_text and created_by are required!')
       } else {
         MongoClient.connect(CONNECTION_STRING, (err, db) => {
-          if(err) console.log('Data based error: ' + err)
+          if(err) console.log('Database error: ' + err)
           else {
             console.log('Successfully connected to MongoDB')
             db.collection(project).insertOne(issue, (err, doc) => {
@@ -88,7 +92,27 @@ module.exports = function (app) {
         res.send('No updated field sent')
       } else {
         updates.update_on = new Date()
-        updates.open = req.body.open
+        updates.open = req.body.open === 'false' ? false: true
+        MongoClient.connect(CONNECTION_STRING, (err, db) => {
+          if(err) console.log('Database error: ' + err)
+          else {
+            console.log('Successfully connected to MongoDB')
+            db.collection(project).findAndModify({_id: ObjectId(id)},
+                                                  {},
+                                                  {$set: updates},
+                                                  {new: true}, 
+                                                   (err, doc) => {
+              if(err) {
+                console.log('Could not update ' + id)
+                res.send('Could not update ' + id)
+              } else {
+                console.log('Successfully updated')
+                res.send('Successfully updated')
+              } 
+            }
+                                                 )
+          }
+        })
       }
     
     })
