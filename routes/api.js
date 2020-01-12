@@ -19,12 +19,27 @@ module.exports = function (app) {
   app.route('/api/issues/:project')
     
     /*
-    I can GET /api/issues/{projectname} for an array of all issues 
-    on that specific project with all the information for each issue as was returned when posted.
+    6. I can GET /api/issues/{projectname} for an array of all issues 
+    on that specific project with all the information for each issue 
+    as was returned when posted.
     */
     .get(function (req, res){
       var project = req.params.project;
-      
+      console.log('Project: ' + project)
+      var query = req.query
+      MongoClient.connect(CONNECTION_STRING, (err, db) => {
+        if(err) console.log('Database error: ' + err)
+          else {
+            console.log('Successfully connected to MongoDB')
+            db.collection(project).find(query).toArray((err, doc) => {
+              if(err) console.log('Error while finding issue: ' + err)
+              else {
+                console.log('Issues: ' + doc)
+                res.send(doc)
+              }
+            })
+          }
+      })
     })
     /*
     2. I can POST /api/issues/{projectname} with form data containing 
