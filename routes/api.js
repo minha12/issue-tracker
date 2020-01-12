@@ -32,7 +32,7 @@ module.exports = function (app) {
         if(err) console.log('Database error: ' + err)
           else {
             console.log('Successfully connected to MongoDB')
-            db.collection(project).find(query).toArray((err, doc) => {
+            db.collection(project).find({issue_title: 'Test'}).toArray((err, doc) => {
               if(err) console.log('Error while finding issue: ' + err)
               else {
                 console.log('Issues: ' + doc)
