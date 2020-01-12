@@ -46,7 +46,7 @@ suite('Functional Tests', function() {
         chai.request(server)
           .post('/api/issues/test')
           .send({
-            issue_title: 'Title',
+            issue_title: 'Title 1',
             issue_text: 'text',
             created_by: 'Functional Test - Every field filled in'
         })
@@ -81,15 +81,42 @@ suite('Functional Tests', function() {
       test('No body', function(done) {
         chai.request(server)
           .put('/api/issues/test')
-          .send()
+          .send({
+            _id: id
+        })
+          .end((err, res) => {
+            assert.equal(res.status, 200)
+            assert.equal(res.text, 'No updated field sent')
+            done()
+        })
       });
       
       test('One field to update', function(done) {
-        
+        chai.reqest(server)
+          .put('/api/issues/test')
+          .send({
+            _id: id,
+            issue_title: 'New title'
+        })
+          .end((err, res) => {
+            assert.equal(res.status, 200)
+            assert.equal(res.text, 'Successfully updated')
+            done()
+        })
       });
       
       test('Multiple fields to update', function(done) {
-        
+        chai.request(server)
+          .put('/api/issues/test')
+          .send({
+            _id: id,
+            issue_title: 'Multiple title update',
+            issue_text: 'Updated text'
+        })
+          .end((err, res) => {
+            assert.equal(res.status, 200)
+            assert.equal(res.text, 'Successfully updated')
+        })
       });
       
     });
@@ -117,7 +144,23 @@ suite('Functional Tests', function() {
       });
       
       test('One filter', function(done) {
-        
+        chai.request(server)
+          .get('/api/issues/test')
+          .query({issue_title: 'Title'})
+          .end((err, res) => {
+            assert.equal(res.status, 200);
+            assert.equal(res.body[0].issue_title, 'Title');
+            assert.property(res.body[0], 'issue_title');
+            assert.property(res.body[0], 'issue_text');
+            assert.property(res.body[0], 'created_on');
+            assert.property(res.body[0], 'updated_on');
+            assert.property(res.body[0], 'created_by');
+            assert.property(res.body[0], 'assigned_to');
+            assert.property(res.body[0], 'open');
+            assert.property(res.body[0], 'status_text');
+            assert.property(res.body[0], '_id');
+            done();
+        })
       });
       
       test('Multiple filters (test for multiple fields you know will be in the db for a return)', function(done) {
