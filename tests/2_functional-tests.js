@@ -148,10 +148,11 @@ suite('Functional Tests', function() {
       test('One filter', function(done) {
         chai.request(server)
           .get('/api/issues/test')
-          .query({issue_title: 'Title'})
+          .query({issue_title: 'Title 1'})
           .end((err, res) => {
+            //console.log(res.body)
             assert.equal(res.status, 200);
-            assert.equal(res.body[0].issue_title, 'Title');
+            assert.equal(res.body[0].issue_title, 'Title 1');
             assert.property(res.body[0], 'issue_title');
             assert.property(res.body[0], 'issue_text');
             assert.property(res.body[0], 'created_on');
@@ -168,11 +169,11 @@ suite('Functional Tests', function() {
       test('Multiple filters (test for multiple fields you know will be in the db for a return)', function(done) {
         chai.request(server)
           .get('/api/issues/test')
-          .query({issue_title: 'Title', issue_text: 'text'})
+          .query({issue_title: 'Title 1', issue_text: 'text'})
           .end((err, res) => {
             assert.equal(res.status, 200);
-            assert.equal(res.body[0].issue_title, 'Title');
-            assert.equal(res.body[0].issue_text, 'Text');
+            assert.equal(res.body[0].issue_title, 'Title 1');
+            assert.equal(res.body[0].issue_text, 'text');
             assert.property(res.body[0], 'issue_title');
             assert.property(res.body[0], 'issue_text');
             assert.property(res.body[0], 'created_on');
