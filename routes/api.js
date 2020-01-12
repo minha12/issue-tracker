@@ -65,7 +65,7 @@ module.exports = function (app) {
         open: true
       }
       if(!issue.issue_title || !issue.issue_text || !issue.created_by) {
-        res.send('issue_title, issue_text and created_by are required!')
+        res.send('issue_title, issue_text and created_by are all required!')
       } else {
         MongoClient.connect(CONNECTION_STRING, (err, db) => {
           if(err) console.log('Database error: ' + err)

@@ -10,6 +10,7 @@ var chaiHttp = require('chai-http');
 var chai = require('chai');
 var assert = chai.assert;
 var server = require('../server');
+var id;
 
 chai.use(chaiHttp);
 
@@ -31,8 +32,10 @@ suite('Functional Tests', function() {
           assert.equal(res.status, 200);
           assert.equal(res.body.issue_title, 'Title')
           assert.equal(res.body.issue_text, 'text')
-         
-           
+          assert.equal(res.body.created_by, 'Functional Test - Every field filled in')
+          assert.equal(res.body.assigned_to, 'Chai and Mocha')
+          assert.equal(res.body.status_text, 'In QA')
+          id = res.body._id
           //fill me in too!
           
           done();
@@ -40,11 +43,35 @@ suite('Functional Tests', function() {
       });
       
       test('Required fields filled in', function(done) {
+        chai.request(server)
+          .post('/api/issues/test')
+          .send({
+            issue_title: 'Title',
+            issue_text: 'text',
+            created_by: 'Functional Test - Every field filled in'
+        })
+          .end( (err, res) => {
+            assert.equal(res.status, 200);
+            assert.equal(res.body.issue_title, 'Title')
+            assert.equal(res.body.issue_text, 'text')
+            assert.equal(res.body.created_by, 'Functional Test - Every field filled in')
+            assert.equal(res.body.assigned_to, '')
+            assert.equal(res.body.status_text, '')
+            done()
+        })
         
       });
       
       test('Missing required fields', function(done) {
-        
+        chai.request(server)
+          .post('/api/issues/test')
+          .send({
+            issue_title: 'Title'
+        })
+          .end((err, res) => {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'issue_title, issue_text and created_by are all required!')
+        })
       });
       
     });
@@ -52,7 +79,9 @@ suite('Functional Tests', function() {
     suite('PUT /api/issues/{project} => text', function() {
       
       test('No body', function(done) {
-        
+        chai.request(server)
+          .put('/api/issues/test')
+          .send()
       });
       
       test('One field to update', function(done) {
