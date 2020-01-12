@@ -25,7 +25,20 @@ module.exports = function (app) {
     
     .post(function (req, res){
       var project = req.params.project;
-      
+      console.log('Project: ' + project)
+      var issue = {
+        issue_title: req.body.issue_title,
+        issue_text: req.body.issue_text,
+        created_by: req.body.created_by,
+        assigned_to: req.body.assigned_to,
+        status_text: req.body.status_text,
+        created_on: new Date(),
+        updated_on: new Date(),
+        open: true
+      }
+      if(!issue.issue_title || !issue.issue_text || !issue.created_by) {
+        res.send('issue_title, issue_text and created_by are required!')
+      }
     })
     
     .put(function (req, res){
