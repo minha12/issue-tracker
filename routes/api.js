@@ -27,6 +27,7 @@ module.exports = function (app) {
       var project = req.params.project;
       console.log('Project: ' + project)
       var query = req.query
+      console.log(query)
       MongoClient.connect(CONNECTION_STRING, (err, db) => {
         if(err) console.log('Database error: ' + err)
           else {
