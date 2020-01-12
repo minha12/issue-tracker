@@ -32,10 +32,10 @@ module.exports = function (app) {
         if(err) console.log('Database error: ' + err)
           else {
             console.log('Successfully connected to MongoDB')
-            db.collection(project).find().toArray((err, doc) => {
+            db.collection(project).find(query).toArray((err, doc) => {
               if(err) console.log('Error while finding issue: ' + err)
               else {
-                console.log('Issues: ' + doc)
+                console.log(doc)
                 res.send(doc)
               }
             })
@@ -133,9 +133,34 @@ module.exports = function (app) {
     
     })
     
+    /*
+    I can DELETE /api/issues/{projectname} with a _id to completely 
+    delete an issue. If no _id is sent return '_id error', success: 
+    'deleted '+_id, failed: 'could not delete '+_id.
+    */
     .delete(function (req, res){
       var project = req.params.project;
-      
+      var id = req.body._id
+      console.log('id: ' + id)
+      if(!id) {
+        res.send('Input an ID to delete')
+      } else {
+        MongoClient.connect(CONNECTION_STRING, (err, db) => {
+          if(err) console.log('Error while connecting to database')
+          else {
+            console.log('Successfully connect to MongoDB')
+            db.collection(project).deleteOne({_id: ObjectId(id)}, (err, doc) => {
+              if(err) {
+                console.log('Could not delete' + id)
+                res.send('Could not delete data' + id)
+              } else {
+                console.log('Deleted ' + id)
+                res.send('Deleted' + id)
+              }
+            })
+          }
+        })
+      }
     });
     
 };
