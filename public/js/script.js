@@ -86,13 +86,15 @@ $(function() {
         const form = $('#updateIssueForm');
         const issueId = form.find('[name="_id"]').val();
         
-        const isOpen = !form.find('[name="open"]').is(':checked');
-        const formData = form.serialize() + (isOpen ? '&open=true' : '&open=false');
+        // Fix: Update how we handle the open status
+        const formData = new FormData(form[0]);
+        const data = Object.fromEntries(formData.entries());
+        data.open = !form.find('[name="open"]').is(':checked');
 
         $.ajax({
             url: '/api/issues/apitest',
             type: 'put',
-            data: formData,
+            data: data,
             success: function(data) {
                 $('#updateIssueModal').modal('hide');
                 form[0].reset();
