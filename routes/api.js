@@ -8,55 +8,36 @@
 
 'use strict';
 
-var expect = require('chai').expect;
-var MongoClient = require('mongodb');
-var ObjectId = require('mongodb').ObjectID;
+const { MongoClient, ObjectId, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 
-const CONNECTION_STRING = process.env.DATABASE; //MongoClient.connect(CONNECTION_STRING, function(err, db) {});
+const client = new MongoClient(process.env.DATABASE, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
 
 module.exports = function (app) {
-
   app.route('/api/issues/:project')
-    
-    /*
-    6. I can GET /api/issues/{projectname} for an array of all issues 
-    on that specific project with all the information for each issue 
-    as was returned when posted.
-    */
-    .get(function (req, res){
-      var project = req.params.project;
-      console.log('Project: ' + project)
-      var query = req.query
-      console.log(query)
-      MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }, (err, client) => {
-        if(err) console.log('Database error: ' + err)
-          else {
-            console.log('Successfully connected to MongoDB')
-            let database = client.db('issue-tracker')
-            database.collection(project).find(query).toArray((err, doc) => {
-              if(err) console.log('Error while finding issue: ' + err)
-              else {
-                console.log(doc)
-                res.send(doc)
-              }
-            })
-          }
-      })
+    .get(async function (req, res){
+      const project = req.params.project;
+      const query = req.query;
+      try {
+        await client.connect();
+        const collection = client.db("issue_tracker").collection(project);
+        const docs = await collection.find(query).toArray();
+        res.json(docs);
+      } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Error accessing database' });
+      }
     })
-    /*
-    2. I can POST /api/issues/{projectname} with form data containing 
-    required issue_title, issue_text, created_by, and optional 
-    assigned_to and status_text.
-    3. The object saved (and returned) will include all of those fields 
-    (blank for optional no input) and also include created_on(date/time), 
-    updated_on(date/time), open(boolean, true for open, false for closed), 
-    and _id.
-    */
-    .post(function (req, res){
-      var project = req.params.project;
-      console.log('Project: ' + project)
-      var issue = {
+
+    .post(async function (req, res){
+      const project = req.params.project;
+      const issue = {
         issue_title: req.body.issue_title,
         issue_text: req.body.issue_text,
         created_by: req.body.created_by,
@@ -65,107 +46,85 @@ module.exports = function (app) {
         created_on: new Date(),
         updated_on: new Date(),
         open: true
-      }
+      };
+
       if(!issue.issue_title || !issue.issue_text || !issue.created_by) {
-        res.send('issue_title, issue_text and created_by are all required!')
-      } else {
-        MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }, (err, client) => {
-          if(err) console.log('Database error: ' + err)
-          else {
-            console.log('Successfully connected to MongoDB')
-            let database = client.db('issue-tracker')
-            database.collection(project).insertOne(issue, (err, doc) => {
-              if(err) console.log('Error while inserting issue: ' + err)
-              console.log(issue)
-              res.json(issue)
-            })
-          }
-        })
+        return res.send('issue_title, issue_text and created_by are all required!');
+      }
+
+      try {
+        await client.connect();
+        const collection = client.db("issue_tracker").collection(project);
+        const result = await collection.insertOne(issue);
+        res.json(issue);
+      } catch (err) {
+        console.error('Error inserting issue:', err);
+        res.status(500).json({ error: 'Could not insert issue' });
       }
     })
-  
-    /*
-    I can PUT /api/issues/{projectname} with a _id and any fields in the object 
-    with a value to object said object. Returned will be 'successfully updated' 
-    or 'could not update '+_id. This should always update updated_on. If no fields 
-    are sent return 'no updated field sent'.
-    */
-    .put(function (req, res){
-      var project = req.params.project;
-      console.log('Project: ' + project)
-      var id = req.body._id
-      var updates = {
+
+    .put(async function (req, res){
+      const project = req.params.project;
+      const id = req.body._id;
+      const updates = {
         issue_title: req.body.issue_title || '',
         issue_text: req.body.issue_text || '',
         created_by: req.body.created_by || '',
         assigned_to: req.body.assigned_to || '',
         status_text: req.body.status_text || '',
-      }
-      for(let prop in updates) {
-        if(updates[prop] === '') {
-          delete updates[prop]
-        }
-      }
+      };
+
+      Object.keys(updates).forEach(key => updates[key] === '' && delete updates[key]);
+
       if(Object.keys(updates).length === 0) {
-        console.log('No updated field sent')
-        res.send('No updated field sent')
-      } else {
-        updates.update_on = new Date()
-        updates.open = req.body.open === 'false' ? false: true
-        MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }, (err, client) => {
-          if(err) console.log('Database error: ' + err)
-          else {
-            console.log('Successfully connected to MongoDB')
-            let database = client.db('issue-tracker')
-            database.collection(project).findAndModify({_id: ObjectId(id)},
-                                                  {},
-                                                  {$set: updates},
-                                                  {new: true}, 
-                                                   (err, doc) => {
-              if(err) {
-                console.log('Could not update ' + id)
-                res.send('Could not update ' + id)
-              } else {
-                console.log('Successfully updated')
-                res.send('Successfully updated')
-              } 
-            }
-                                                 )
-          }
-        })
+        return res.send('No updated field sent');
       }
-    
+
+      updates.updated_on = new Date();
+      updates.open = req.body.open === 'false' ? false : true;
+
+      try {
+        await client.connect();
+        const collection = client.db("issue_tracker").collection(project);
+        const result = await collection.findOneAndUpdate(
+          { _id: new ObjectId(id) },
+          { $set: updates },
+          { returnDocument: 'after' }
+        );
+        
+        // MongoDB 6.x returns the modified document directly
+        if (result) {
+          res.send('Successfully updated');
+        } else {
+          res.send('Could not update ' + id);
+        }
+      } catch (err) {
+        console.error('Error updating:', err);
+        res.send('Could not update ' + id);
+      }
     })
-    
-    /*
-    I can DELETE /api/issues/{projectname} with a _id to completely 
-    delete an issue. If no _id is sent return '_id error', success: 
-    'deleted '+_id, failed: 'could not delete '+_id.
-    */
-    .delete(function (req, res){
-      var project = req.params.project;
-      var id = req.body._id
-      console.log('id: ' + id)
+
+    .delete(async function (req, res){
+      const project = req.params.project;
+      const id = req.body._id;
+
       if(!id) {
-        res.send('Input an ID to delete')
-      } else {
-        MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }, (err, client) => {
-          if(err) console.log('Error while connecting to database')
-          else {
-            console.log('Successfully connect to MongoDB')
-            let database = client.db('issue-tracker')
-            database.collection(project).deleteOne({_id: ObjectId(id)}, (err, doc) => {
-              if(err) {
-                console.log('Could not delete' + id)
-                res.send('Could not delete data' + id)
-              } else {
-                console.log('Deleted ' + id)
-                res.send('Deleted ' + id)
-              }
-            })
-          }
-        })
+        return res.send('Input an ID to delete');
+      }
+
+      try {
+        await client.connect();
+        const collection = client.db("issue_tracker").collection(project);
+        const result = await collection.deleteOne({ _id: new ObjectId(id) });
+        
+        if(result.deletedCount === 0) {
+          res.send('Could not delete ' + id);
+        } else {
+          res.send('Deleted ' + id);
+        }
+      } catch (err) {
+        console.error('Error deleting:', err);
+        res.send('Could not delete ' + id);
       }
     });
-    
 };
