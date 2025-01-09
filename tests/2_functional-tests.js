@@ -12,6 +12,9 @@ var assert = chai.assert;
 var server = require('../server');
 var id;
 
+var mocha = require('mocha');
+var { suite, test } = mocha;
+
 chai.use(chaiHttp);
 
 suite('Functional Tests', function() {
