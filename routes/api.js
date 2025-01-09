@@ -23,7 +23,22 @@ module.exports = function (app) {
   app.route('/api/issues/:project')
     .get(async function (req, res){
       const project = req.params.project;
-      const query = req.query;
+      const query = { ...req.query };
+      
+      // Convert _id to ObjectId if present
+      if (query._id) {
+        try {
+          query._id = new ObjectId(query._id);
+        } catch (err) {
+          return res.status(400).json({ error: 'Invalid issue ID format' });
+        }
+      }
+
+      // Fix: Convert open string to boolean
+      if (query.open !== undefined) {
+        query.open = query.open === 'true';
+      }
+
       try {
         await client.connect();
         const collection = client.db("issue_tracker").collection(project);
