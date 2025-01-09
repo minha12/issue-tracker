@@ -1,0 +1,65 @@
+/* Navigation styles */
+.nav-pills .nav-link.active {
+    background-color: #0d6efd;
+}
+
+/* API documentation styles */
+.endpoint {
+    border-left: 4px solid #0d6efd;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: #f8f9fa;
+}
+
+.method {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.method.get { 
+    background-color: #28a745; 
+    color: white; 
+}
+
+.method.post { 
+    background-color: #0d6efd; 
+    color: white; 
+}
+
+.method.put { 
+    background-color: #ffc107; 
+}
+
+.method.delete { 
+    background-color: #dc3545; 
+    color: white; 
+}
+
+.response-example {
+    background-color: #272822;
+    color: #f8f8f2;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    margin: 1rem 0;
+}
+
+/* Issue card styles */
+.card-body .small p {
+    margin-bottom: 0.5rem;
+}
+
+.card-footer {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Form styles */
+.form-label {
+    font-weight: 500;
+}
+
+.text-muted.mb-3 {
+    font-size: 0.875rem;
+}
