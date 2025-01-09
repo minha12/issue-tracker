@@ -29,11 +29,12 @@ module.exports = function (app) {
       console.log('Project: ' + project)
       var query = req.query
       console.log(query)
-      MongoClient.connect(CONNECTION_STRING, (err, db) => {
+      MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }, (err, client) => {
         if(err) console.log('Database error: ' + err)
           else {
             console.log('Successfully connected to MongoDB')
-            db.collection(project).find(query).toArray((err, doc) => {
+            let database = client.db('issue-tracker')
+            database.collection(project).find(query).toArray((err, doc) => {
               if(err) console.log('Error while finding issue: ' + err)
               else {
                 console.log(doc)
@@ -68,11 +69,12 @@ module.exports = function (app) {
       if(!issue.issue_title || !issue.issue_text || !issue.created_by) {
         res.send('issue_title, issue_text and created_by are all required!')
       } else {
-        MongoClient.connect(CONNECTION_STRING, (err, db) => {
+        MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }, (err, client) => {
           if(err) console.log('Database error: ' + err)
           else {
             console.log('Successfully connected to MongoDB')
-            db.collection(project).insertOne(issue, (err, doc) => {
+            let database = client.db('issue-tracker')
+            database.collection(project).insertOne(issue, (err, doc) => {
               if(err) console.log('Error while inserting issue: ' + err)
               console.log(issue)
               res.json(issue)
@@ -110,11 +112,12 @@ module.exports = function (app) {
       } else {
         updates.update_on = new Date()
         updates.open = req.body.open === 'false' ? false: true
-        MongoClient.connect(CONNECTION_STRING, (err, db) => {
+        MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }, (err, client) => {
           if(err) console.log('Database error: ' + err)
           else {
             console.log('Successfully connected to MongoDB')
-            db.collection(project).findAndModify({_id: ObjectId(id)},
+            let database = client.db('issue-tracker')
+            database.collection(project).findAndModify({_id: ObjectId(id)},
                                                   {},
                                                   {$set: updates},
                                                   {new: true}, 
@@ -146,11 +149,12 @@ module.exports = function (app) {
       if(!id) {
         res.send('Input an ID to delete')
       } else {
-        MongoClient.connect(CONNECTION_STRING, (err, db) => {
+        MongoClient.connect(CONNECTION_STRING, { useUnifiedTopology: true }, (err, client) => {
           if(err) console.log('Error while connecting to database')
           else {
             console.log('Successfully connect to MongoDB')
-            db.collection(project).deleteOne({_id: ObjectId(id)}, (err, doc) => {
+            let database = client.db('issue-tracker')
+            database.collection(project).deleteOne({_id: ObjectId(id)}, (err, doc) => {
               if(err) {
                 console.log('Could not delete' + id)
                 res.send('Could not delete data' + id)
